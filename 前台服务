@@ -1,0 +1,33 @@
+https://codyi96.github.io/2020/08/02/android-service/
+
+public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(mNotificationId, mNotificationName, NotificationManager.IMPORTANCE_HIGH);
+            mNotificationManager.createNotificationChannel(channel);
+        }
+        startForeground(1, getNotification());
+    }
+
+    private Notification getNotification() {
+        Notification.Builder builder = new Notification.Builder(this)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("七牛推流")
+                .setContentText("后台运行中");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder.setChannelId(mNotificationId);
+        }
+        return builder.build();
+    }
+    
+    
+    if (mServiceIntent == null) {
+            mServiceIntent = new Intent(StreamingApplication.this, KeepAppAliveService.class);
+        }
+        startService(mServiceIntent);

@@ -1,0 +1,17 @@
+scale 缩放
+https://www.nhooo.com/note/qadxyv.html
+
+①如果onTouch()方法返回值是true（事件被消费）时，则onTouchEvent()方法将不会被执行；
+
+②只有当onTouch()方法返回值是false（事件未被消费，向下传递）时，onTouchEvent方法才被执行。
+
+代码中实现手势监听分三种，
+
+一种是重写Activity内部或者自定义view 内部重写onTouchEvent方法来实现全局的手势监听；
+
+另一种是通过某个系统控件实现OnTouchListener接口重写onTouch方法实现某一控件的手势监听；这样做的两个好处在于，不用单纯为了Touch事件去自定义控件，并且在Activity内部控件采用此处理方式，非常适合进行数据的传递；
+
+最后一种是通过Activity全局实现OnTouchListener接口重写onTouch方法，然后在该方法内部用GestureDetector拦截掉事件：
+————————————————
+版权声明：本文为CSDN博主「Chin_style」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/weixin_41101173/article/details/80460632

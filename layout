@@ -1,1 +1,55 @@
 https://developer.android.com/studio/write/tool-attributes?hl=zh-cn
+https://www.jianshu.com/p/6fcaffaeffd2
+
+android
+命名空间android用于 Android 系统定义的一些属性。
+
+app
+命名空间app用于我们应用自定义的一些属性，这个与 Android 自定义属性和系统控件扩展应该有关系，大家可以再继续研究一下。
+
+tools
+根据官方定义，tools命名空间用于在 XML 文档记录一些，当应用打包的时候，会把这部分信息给过滤掉，不会增加应用的 size，说直白点，这些属性是为IDE提供相关信息。
+
+
+https://www.jianshu.com/p/910685a8ea91
+xmlns:app="http://schemas.android.com/apk/res-auto"
+在项目需求中，我们往往使用系统自带的属性以及控件是不够的，我们可能需要导入自定义控件的一些属性，或者support支持包之类的。
+为了引入自定义的属性，我们可以xmlns:前缀=http://schemas.android.com/apk/res/你的应用程序包路径，将其导入。
+但现在的普遍做法是使用xmlns:app="http://schemas.android.com/apk/res-auto"，因为res-auto可以引用所有的自定义包名。
+
+android:paddingLeft="200dp"  按钮变大
+android:layout_marginTop="200dp". 相对于父容器
+
+android:layout_alignLeft="@+id/tx" 和兄弟组件保持左侧一致
+
+android:layout_alignLeft="@+id/tx"
+
+
+ui优化。https://blog.csdn.net/bboyfeiyu/article/details/45869393
+
+1，include。使用include最常见的问题就是findViewById查找不到目标控件，
+
+include标签的id如果不是View.NO_ID的话会把该id设置给被引入的布局根元素的id
+这个问题出现的前提是在include时设置了id，而在findViewById时却用了被include进来的布局的根元素id。
+例如上述例子中，include时设置了该布局的id为my_title_ly，而my_title_layout.xml中的根视图的id为my_title_parent_id。
+此时如果通过findViewById来找my_title_parent_id这个控件，然后再查找my_title_parent_id下的子控件则会抛出空指针。
+正确代码如下 :
+// 使用include时设置的id,即R.id.my_title_ly
+View titleView = findViewById(R.id.my_title_ly) ;  
+// 通过titleView找子控件
+TextView titleTextView = (TextView)titleView.findViewById(R.id.title_tv) ;  
+titleTextView.setText("new Title");  
+
+
+2，Merge
+其实就是减少在include布局文件时的层级。标签是这几个标签中最让我费解的，大家可能想不到，标签竟然会是一个Activity，里面有一个LinearLayout对象。
+使用merge来组织子元素可以减少布局的层级。例如我们在复用一个含有多个子控件的布局时，肯定需要一个ViewGroup来管理，减少层级
+
+
+
+
+switch 开关
+
+
+
+

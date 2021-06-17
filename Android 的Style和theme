@@ -1,0 +1,22 @@
+1.Theme 是针对窗体级别的，改变窗体样式
+
+2.Style 是针对窗体元素级别的，改变指定控件或Layout的样式
+
+https://www.jianshu.com/p/c68f8e29f47f
+
+Android 系统的themes.xml和style.xml(位于系统源代码frameworks\base\core\res\res\values\)包含很多系统定义好的style。Style和Theme都是资源。
+
+
+1）Style是包含一种或者多种格式化属性的集合，可以将其作为一个单位用在布局XML单个元素中。例如：定义风格（定义文字的字号和颜色），然后用在view元素中。
+
+2）Themeye是包含一种或者多种格式化属性的集合，可以将其作为一个单位用所有的Activity或某个Activity中。
+例如：定义主题（为Window Frame和Panel的前景和背景定义了一组颜色并为菜单定义了文字的大小和颜色），然后用在Activity中。
+
+自定义Style步骤：
+1.在res/values目录下新建style.xml
+
+2.增加一个<resource>根节点，对每一种Style定义name，也可以增加parent属性
+
+3.<style>元素内部可以有多个item
+
+自定义Theme 的步骤和自定义Style类似，不同的是Theme应用在Android Manifest中定义的

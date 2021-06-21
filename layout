@@ -9,6 +9,10 @@ app
 
 tools
 根据官方定义，tools命名空间用于在 XML 文档记录一些，当应用打包的时候，会把这部分信息给过滤掉，不会增加应用的 size，说直白点，这些属性是为IDE提供相关信息。
+LinearLayout根
+FrameLayout 中的元素默认左上角：  android:layout_gravity="center" ，android:layout_gravity="right" 相对于父元素
+ScrollView，内部只能有一个元素，LinearLayout包起来
+<com.qiniu.pili.droid.shortvideo.demo.view.ItemView
 
 
 https://www.jianshu.com/p/910685a8ea91

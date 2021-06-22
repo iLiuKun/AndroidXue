@@ -1,0 +1,26 @@
+http://mock-api.com/app.html#!/login  模拟接口
+https://juejin.cn/post/6844903876542496776
+
+
+//Retrofit
+implementation 'com.squareup.retrofit2:retrofit:2.5.0'
+//Gson converter
+implementation 'com.squareup.retrofit2:converter-gson:2.5.0'
+
+使用步骤：
+创建网络请求的接口
+public interface GitHubService {
+  @GET("users/{user}/repos")
+  Call<List<Repo>> listRepos(@Path("user") String user);
+}
+
+创建Retrofit实例
+Retrofit retrofit = new Retrofit.Builder()
+    .baseUrl("https://api.github.com/")
+    .build();
+
+创建网络请求接口的实例
+GitHubService service = retrofit.create(GitHubService.class);
+
+发送网络请求
+Call<List<Repo>> repos = service.listRepos("octocat");

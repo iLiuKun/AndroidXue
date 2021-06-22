@@ -1,0 +1,44 @@
+一、常用热门必备
+1、Retrofit， 链接：https://github.com/square/retrofit
+2、RxAndroid， 链接：https://github.com/ReactiveX/RxAndroid
+3、RxLifecycle， 链接：https://github.com/trello/RxLifecycle
+4、EventBus，链接：https://github.com/greenrobot/EventBus
+5、Glide， 链接：https://github.com/bumptech/glide
+6、Gson， 链接：https://github.com/google/gson
+7、okhttp， 链接：https://github.com/square/okhttp/
+8、dagger， 链接：https://github.com/google/dagger
+9、butterknife， 链接：https://github.com/JakeWharton/butterknife
+
+二、自定义View
+1、PhotoView， 链接：https://github.com/chrisbanes/PhotoView
+2、CircleImageView， 链接：https://github.com/hdodenhof/CircleImageView
+3、SmartRefreshLayout， 链接：https://github.com/scwang90/SmartRefreshLayout
+4、Android-PickerView(联动选择器)， 链接：https://github.com/Bigkoo/Android-PickerView
+5、CityPicker(城市选择)， 链接：https://github.com/zaaach/CityPicker
+6、android-gif-drawable， 链接：https://github.com/koral–/android-gif-drawable
+7、MPAndroidChart(图表)， 链接：https://github.com/PhilJay/MPAndroidChart
+8、banner， 链接：https://github.com/youth5201314/banner
+
+三、数据库日志
+1、logger(日志打印)， 链接：https://github.com/orhanobut/logger
+2、greenDAO(数据库)， 链接：https://github.com/greenrobot/greenDAO
+
+四、视频音频
+1、ijkplayer(视频播放)，链接：https://github.com/Bilibili/ijkplayer
+
+五、工具类
+1、AndroidUtilCode， 链接：https://github.com/Blankj/AndroidUtilCode
+2、Zxing， 链接：https://github.com/zxing/zxing
+3、BGAQRCode-Android(二维码扫描)， 链接：https://github.com/bingoogolapple/BGAQRCode-Android
+4、Glide-transformations， 链接：https://github.com/wasabeef/glide-transformations
+5、BaseRecyclerViewAdapterHelper， 链接：https://github.com/CymChad/BaseRecyclerViewAdapterHelper
+6、AndroidChangeSkin(换肤)， 链接：https://github.com/hongyangAndroid/AndroidChangeSkin
+7、uCrop(裁剪)， 链接：https://github.com/Yalantis/uCrop
+8、RxPermissions(权限请求)， 链接：https://github.com/tbruyelle/RxPermissions
+9、ProgressManager(进度监听)， 链接：https://github.com/JessYanCoding/ProgressManager
+
+六、其他第三方框架汇总
+1、https://github.com/SenhLinsh/Android-Hot-Libraries
+————————————————
+版权声明：本文为CSDN博主「SonnyJack」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/SonnyJack/article/details/106404276

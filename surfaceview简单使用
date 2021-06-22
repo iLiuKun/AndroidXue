@@ -1,0 +1,40 @@
+private SurfaceView mSurfaceView;
+mSurfaceView = findViewById(R.id.SurfaceView);
+mSurfaceView.getHolder().addCallback(mCallback);
+mMediaPlayer.setDisplay(mSurfaceView.getHolder()); //SurfaceHolder
+mMediaPlayer.setDisplay(mSurfaceView.getHolder());
+mSurfaceView.setLayoutParams(layout);
+
+
+mPLMediaPlayer = new PLMediaPlayer(this, mAVOptions);
+mPLMediaPlayer.setSurface(mSurface);
+
+private Surface mSurface;//通过surfacsurfaceTexture获得surfacsurface
+方法参数：SurfaceTexture surface
+mSurfaceTexture = surface;
+mSurface = new Surface(mSurfaceTexture);
+
+
+
+private TextureView mTextureView;
+<TextureView
+        android:id="@+id/texture_view"
+        android:layout_width="wrap_content"
+        android:layout_height="600px"
+        android:rotation="0" />
+        
+        通常这部分内容会通过 SurfaceView 或者 TextureView 呈现在 UI 界面上。https://zhuanlan.zhihu.com/p/147322501
+一般来说 SurfaceView 能够提供更好的性能，但是因为 SurfaceView 本身的输出不是通过 Android 的 UI Renderer（HWUI），
+而是直接走系统的窗口合成器 SurfaceFlinger，所以无法实现对普通 View 的完全兼容。包括不支持 transform 动画，
+不支持半透明混合，移动，大小改变，隐藏/显示等时机会出现各种瑕疵等等，总的来说 SurfaceView 只适用于有限的场景。
+
+TextureView 正是为了解决 SurfaceView 这些的问题而诞生，在使用上它基本可以无缝替换 SurfaceView，
+并且因为 TextureView 跟普通 View 一样是通过 UI Renderer 绘制到当前 Activity 的窗口上，
+所以它跟普通 View 基本上是完全兼容的，不存在 SurfaceView 的种种问题。
+TextureView 的绘制和输出通常会涉及三个线程：
+
+我们自己创建的用于绘制 TextureView 的线程（当然实际上是绘制 TextureView 创建的 
+SurfaceTexture，通过 Surface 接口），在这里我们称之为 TextureView Render 线程（实际的名字取决于应用的绘制引擎）；
+系统创建的用于操作 View 的 UI 线程，也是应用的主线程；
+系统创建的用于绘制所有 View 的内容到当前 Activity 窗口的 Android Render 线程
+private SurfaceTexture mSurfaceTexture;

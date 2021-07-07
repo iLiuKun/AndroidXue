@@ -1,0 +1,233 @@
+
+https://www.jianshu.com/p/060b5f68da79
+private void performMeasure(int childWidthMeasureSpec, int childHeightMeasureSpec) {
+  . . .
+  try { 
+    mView.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+  } finally {
+    . . .
+  }
+}
+上面代码中的mView即为decorView，也就是说会转向对View.measure()方法的调用，这个方法的源码如下
+对于decorView来说，实际执行测量工作的是FrameLayout的onMeasure()方法，该方法的源码如下：
+FrameLayout是ViewGroup的子类，后者有一个View[]类型的成员变量mChildren，代表了其子View集合。通过getChildAt(i)能获取指定索引处的子View，通过getChildCount()可以获得子View的总数。
+在上面的源码中，首先调用measureChildWithMargins()方法对所有子View进行了一遍测量，并计算出所有子View的最大宽度和最大高度。而后将得到的最大高度和宽度加上padding，这里的padding包括了父View的padding和前景区域的padding。然后会检查是否设置了最小宽高，并与其比较，将两者中较大的设为最终的最大宽高。最后，若设置了前景图像，我们还要检查前景图像的最小宽高。
+
+经过了以上一系列步骤后，我们就得到了maxHeight和maxWidth的最终值，表示当前容器View用这个尺寸就能够正常显示其所有子View（同时考虑了padding和margin）。而后我们需要调用resolveSizeAndState()方法来结合传来的MeasureSpec来获取最终的测量宽高，并保存到mMeasuredWidth与mMeasuredHeight成员变量中。
+
+从以上代码的执行流程中，我们可以看到，容器View通过measureChildWithMargins()方法对所有子View进行测量后，才能得到自身的测量结果。也就是说，对于ViewGroup及其子类来说，要先完成子View的测量，再进行自身的测量（考虑进padding等）。
+接下来我们来看下ViewGroup的measureChildWithMargins()方法的实现：
+
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+onLayout即确定控件的位置，上篇文章我们说到performTraversals方法中会调用host.measure方法，在调用完host.measure方法后，就会调用host.layout对View进行定位，这也是今天我们要讨论的内容。
+public final void layout(int l, int t, int r, int b) {
+        boolean changed = setFrame(l, t, r, b);
+        if (changed || (mPrivateFlags & LAYOUT_REQUIRED) == LAYOUT_REQUIRED) {
+            if (ViewDebug.TRACE_HIERARCHY) {
+                ViewDebug.trace(this, ViewDebug.HierarchyTraceType.ON_LAYOUT);
+            }
+            onLayout(changed, l, t, r, b);
+            mPrivateFlags &= ~LAYOUT_REQUIRED;
+        }
+        mPrivateFlags &= ~FORCE_LAYOUT;
+    }
+    
+    protected boolean setFrame(int left, int top, int right, int bottom) {
+        boolean changed = false;
+        if (mLeft != left || mRight != right || mTop != top || mBottom != bottom) {
+            changed = true;
+            
+            。。。省略部分代码。。。
+ 
+            mLeft = left;
+            mTop = top;
+            mRight = right;
+            mBottom = bottom;
+            
+            。。。省略部分代码。。。
+            
+        }
+        return changed;
+    }
+    
+    在setFrame方法中将left，top，right，bottom这四个值保存下来。也就是说在layout中的setFrame方法中会将子View相对于父View的左，上，右，下这四个值保存下来，这四个值就会确定子View在父View中的位置。仔细的看layout方法的源码你会发现和measure方法一样在layout中调用了onLayout方法，赶紧先去看看View的onLayout的逻辑
+@Override
+    protected abstract void onLayout(boolean changed,
+            int l, int t, int r, int b);
+            
+       啊？啥都没有，你这是弄啥嘞？其实仔细想想你就会理解，因为onLayout的目的是确定子View在父View中的位置，那么这个步骤肯定是由父View来决定的，因此在View中onLayout是一个空的实现，既然如此我们就去看看ViewGroup的onLayout的源码呗。
+       @Override
+    protected abstract void onLayout(boolean changed,
+            int l, int t, int r, int b);
+            
+            我们看到它是一个抽象的方法，我们都知道当继承一个类时必须实现其中的抽象方法，这也就是说在自定义ViewGroup时我们必须实现onLayout方法。在上一篇我们就说过onLayout的作用就是确定子View的位置，那么它是怎样确定子View的位置的呢？其实它是通过四个参数 l,t,r,b即代表距离父View的左上右下的距离，看张图你就会明白它的含义
+mLeft——View.getLeft():子View的左边界到父View的左边界的距离
+
+       // 获取子View的左边界到父View的左边界的距离
+	public final int getLeft() {
+		return mLeft;
+	}
+  
+  mTop——View.getTop():子View的顶部到父View顶部的距离
+
+mRight——View.getRight():子View的右边界到父View的左边界的距离
+
+mBottom——View.getBottom():子View的底部到父View的顶部的距离
+
+        /**
+	 * Top position of this view relative to its parent.
+	 * 
+	 * @return The top of this view, in pixels.
+	 */
+	// 获取子View的顶部到父View顶部的距离
+	public final int getTop() {
+		return mTop;
+	}
+ 
+	// 获取子View的底部到父View的顶部的距离
+	public final int getBottom() {
+		return mBottom;
+	}
+ 
+	// 获取子View的左边界到父View的左边界的距离
+	public final int getLeft() {
+		return mLeft;
+	}
+ 
+	// 获取子View的右边界到父View的左边界的距离
+	public final int getRight() {
+		return mRight;
+	}
+ 
+	public final int getWidth() {
+		return mRight - mLeft;
+	}
+ 
+	/**
+	 * Return the height of your view.
+	 * 
+	 * @return The height of your view, in pixels.
+	 */
+	public final int getHeight() {
+		return mBottom - mTop;
+	}
+ 
+	/**
+	 * The height of this view as measured in the most recent call to measure().
+	 * This should be used during measurement and layout calculations only. Use
+	 * {@link #getHeight()} to see how tall a view is after layout.
+	 * 
+	 * @return The measured height of this view.
+	 */
+	// 获取测量的宽度
+	public final int getMeasuredWidth() {
+		return mMeasuredWidth;
+	}
+ 
+	/**
+	 * The width of this view as measured in the most recent call to measure().
+	 * This should be used during measurement and layout calculations only. Use
+	 * {@link #getWidth()} to see how wide a view is after layout.
+	 * 
+	 * @return The measured width of this view.
+	 */
+	// 获取测量的高度
+	public final int getMeasuredHeight() {
+		return mMeasuredHeight;
+	}
+  
+   如果你仔细看上面的源码你会看到在上面的距离中还有两对方法，getMeasureWidth,getMeasureHeight和getWidth,getHeight它们有什么区别呢？对于这个问题可能有很多人不是特别理解，在这里我们以getMeasureWidth和getWidth这两个方法为例来进行说明，
+①getMeasureWidth()方法在measure()过程结束后就可以获得到它的值，而getWidth()方法要在layout()过程结束后才能获取到。这么说有什么依据？首先看看getMeasureWidth()方法的返回值，它是mMeasureWidth，对于它你熟悉吗？这就是在上篇博客中通过setMeasureDimension()方法设置的值，而getWidth()的返回值是mRight-mLeft，这两个值是在layout()过程中的setFrame方法中才设置的值，也就是说在layout结束后才确定的。
+
+②getMeasureWidth()方法中的值是通过setMeasuredDimension()方法来进行设置的，而getWidth()方法中的值则是通过视图右边的坐标减去左边的坐标计算出来的。关于这两个方法的区别，现在有网上的很多说法是不正确的，我将通过一篇博客来给大家详细的说说这两个值的区别。
+
+
+ 接下来通过一个简单的例子来了解下latyout的过程，这个例子是这样的，自定义一个ViewGroup让其子View在屏幕中间位置横向排列，首先我们来谈谈它的思想，我觉得当你在做一件事情的时候一定认真的去分析它的实现过程，按照自己的思想去设计自己的东西，不管可不可行，去尝试即使错了对自己也是一个很好的历练，这样时间长了你会发现你的技术提升了很多
+
+我的思路是这样的
+
+让自定义的ViewGroup的子View在屏幕中间横向排列思路：
+
+①获得屏幕的高度
+
+②获得子View的宽度和高度，通过屏幕的高度和子View的高度来计算layout时子View到父View顶端的距离
+
+③因为子View是横向排列的，所以需要设定一个变量表示子View到父View左边界的距离，每次循环加上子View的宽度来设定下一个子View到父View左侧的距离
+package com.example.customviewpractice;
+ 
+import android.app.Activity;
+import android.content.Context;
+import android.util.AttributeSet;
+import android.util.DisplayMetrics;
+import android.view.View;
+import android.view.ViewGroup;
+ 
+public class MyViewGroup extends ViewGroup {
+ 
+	private Context mContext;
+	private int sreenH;
+ 
+	public MyViewGroup(Context context, AttributeSet attrs) {
+		super(context, attrs);
+		mContext = context;
+		// 获取屏幕的高度
+		sreenH = getScreenSize(((Activity) mContext))[1];
+	}
+ 
+	@Override
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+ 
+		super.onMeasure(widthMeasureSpec, widthMeasureSpec);
+		// 测量子View
+		measureChildren(widthMeasureSpec, heightMeasureSpec);
+	}
+ 
+	@Override
+	protected void onLayout(boolean changed, int l, int t, int r, int b) {
+		// 获得子View个数
+		int childCount = getChildCount();
+		// 设置一个变量保存到父View左侧的距离
+		int mLeft = 0;
+		// 遍历子View
+		for (int i = 0; i < childCount; i++) {
+ 
+			View childView = getChildAt(i);
+			// 获得子View的高度
+			int childViewHeight = childView.getMeasuredHeight();
+			// 获得子View的宽度
+			int childViewWidth = childView.getMeasuredWidth();
+			// 让子View在竖直方向上显示在屏幕的中间位置
+			int height = sreenH / 2 - childViewHeight / 2;
+			// 调用layout给每一个子View设定位置mLeft,mTop,mRight,mBottom.左上右下
+			childView.layout(mLeft, height, mLeft + childViewWidth, height
+					+ childViewHeight);
+			// 改变下一个子View到父View左侧的距离
+			mLeft += childViewWidth;
+		}
+	}
+ 
+	/**
+	 * 获取屏幕尺寸
+	 */
+	public static int[] getScreenSize(Activity activity) {
+		DisplayMetrics metrics = new DisplayMetrics();
+		activity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+		return new int[] { metrics.widthPixels, metrics.heightPixels };
+	}
+}
+)在自定义控件中重写onMeasure然后直接调用super.onMeasure(widthMeasureSpec, widthMeasureSpec)将测量过程按照默认的过程测量，假如按照这种方式的话在onWindowFocusChanaged方法中调用getMeasuredWidth方法你会发现值为0？为什么？
+
+    原因很简单在调用super.onMeasure(widthMeasureSpec, widthMeasureSpec)方法，在onMeasure方法中会调用setMeasuredDimension方法，如果没有设置mMinWidth的话一般给宽设置的默认值为0所以getMeasuredDimension方法的返回就为0；这样我们就了解到如果要想通过getMeasuredWidth获得值必须要测量即通过一个路径可以调用到setMeasuredDimension方法，否则一般情况下getMeasuredWidth的值是为0的；
+
+
+
+
+①getMeasuredWidth方法获得的值是setMeasuredDimension方法设置的值，它的值在measure方法运行后就会确定
+
+②getWidth方法获得是layout方法中传递的四个参数中的mRight-mLeft，它的值是在layout方法运行后确定的
+
+③一般情况下在onLayout方法中使用getMeasuredWidth方法，而在除onLayout方法之外的地方用getWidth方法。
+
+
+
+	public final int getLeft() {

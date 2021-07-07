@@ -1,0 +1,52 @@
+setShowText 会调用 invalidate() 和 requestLayout()。这些调用对于确保视图可靠运行至关重要。您必须在视图属性发生任何可能改变其外观的更改后使该视图失效，
+以便系统知道需要重新绘制该视图。同样，如果属性更改可能会影响视图的大小或形状，则需要请求新的布局。遗漏这些方法调用可能会导致难以发现的错误。
+
+android.graphics 框架将绘制分为两个方面：
+
+需要绘制什么，由 Canvas 处理
+如何绘制，由 Paint 处理。
+
+例如，Canvas 提供绘制线条的方法，Paint 则提供定义线条颜色的方法。Canvas 具有绘制矩形的方法，
+Paint 则定义是在矩形中填充颜色还是留空。简而言之，Canvas 定义您可以在屏幕上绘制的形状，Paint 则定义您绘制的每个形状的颜色、样式和字体等。
+
+可绘制对象概览
+如果您需要在应用内显示静态图片，可以使用 Drawable 类及其子类绘制形状和图片。Drawable 是可绘制对象的常规抽象。不同的子类可用于特定的图片场景，您可以对其进行扩展以定义您自己的行为方式独特的可绘制对象。
+
+除了使用类构造函数之外，还可以通过另外两种方法定义和实例化 Drawable：
+
+
+扩充保存在项目中的图片资源（位图文件）。
+扩充用于定义可绘制属性的 XML 资源。
+dimensions尺寸
+
+
+    Resources res = context.getResources();
+    Drawable myImage = ResourcesCompat.getDrawable(res, R.drawable.my_image, null);
+    
+如果您想创建一个 Drawable 对象，该对象最初并不依赖于由您的代码定义的变量或用户互动，则最好在 XML 中定义 Drawable。即使您预期 Drawable 在用户与您的应用互动时属性会更改，您也应考虑在 XML 中定义该对象，因为您可以在对其进行实例化之后修改其属性。
+
+在 XML 中定义 Drawable 之后，将文件保存在项目的 res/drawable/ 目录下。以下示例展示了定义 TransitionDrawable 资源（继承自 Drawable）的 XML
+
+    <!-- res/drawable/expand_collapse.xml -->
+    <transition xmlns:android="http://schemas.android.com/apk/res/android">
+        <item android:drawable="@drawable/image_expand">
+        <item android:drawable="@drawable/image_collapse">
+    </transition>
+    
+        Resources res = context.getResources();
+    TransitionDrawable transition =
+        (TransitionDrawable) ResourcesCompat.getDrawable(res, R.drawable.expand_collapse, null);
+
+    ImageView image = (ImageView) findViewById(R.id.toggle_image);
+    image.setImageDrawable(transition);
+
+    // Description of the initial state that the drawable represents.
+    image.setContentDescription(getResources().getString(R.string.collapsed));
+
+    // Then you can call the TransitionDrawable object's methods.
+    transition.startTransition(1000);
+
+    // After the transition is complete, change the image's content description
+    // to reflect the new state.
+    
+    

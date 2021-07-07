@@ -1,0 +1,243 @@
+ ValueAnimator是计算动画过程中变化的值，包含动画的开始值，结束值，持续时间等属性。
+ 但是这些值与我们的控件是无关的，要想把计算出来的值应用到对象上，必须为ValueAnimator注册一个监听器，
+ 该监听器负责更新对象的属性值。在实现这个监听器的时候，可以通过getAnimatedValue()的方法来获取当前动画的值，拿到这个值后，我们就可以为所欲为了。
+————————————————
+ValueAnimator valueAnimator=ValueAnimator.ofFloat(0,100);
+valueAnimator.setDuration(3000);
+
+valueAnimator.addUpdateListener(new AnimatorUpdateListener() {
+
+    @Override
+    public void onAnimationUpdate(ValueAnimator animation) {
+        float value=(Float) animation.getAnimatedValue();
+        ivImage.setTranslationX(value);
+    }
+});
+valueAnimator.start();
+
+ObjectAnimator的基本用法
+相比于ValueAnimator，在开发中可能ObjectAnimator要比ValueAnimator用的多，因为ObjectAnimator可以直接操作对象的属性，而不用像ValueAnimator那么麻烦。
+假如让一个ImageView做旋转的动画，代码可以这样写：
+————————————————
+ObjectAnimator objectAnimator=ObjectAnimator.ofFloat(ivImage,"rotation",0,360);
+objectAnimator.setDuration(3000);
+objectAnimator.start();
+从上述代码我们可以看到ObjectAnimator与ValueAnimator的用法有点相似，又有不同，
+在上述代码中objectAnimator调用了ofFloat()方法来去创建一个ObjectAnimator的实例，
+与ValueAnimator不同的是，这里的ofFloat()方法当中接收的参数有点变化了。这里第一个参数要求传入一个object对象，
+即进行动画的对象，在上面我们传了一个ImageView。第二个参数是属性的名字，因为做旋转动画所以这里传的属性的名字为“rotation”。
+后面就是可变参数了，这里我们传的是0，360，表示让ImageView旋转360度，然后设置时长，调用start方法
+————————————————
+
+想看到透明度渐变的效果呢，代码可以这么写
+ObjectAnimator objectAnimator;
+objectAnimator=ObjectAnimator.ofFloat(ivImage,"alpha",0,1);
+objectAnimator.setDuration(3000);
+objectAnimator.start();
+属性动画的用法还是比较简单的，肯定有的童鞋会有疑问，ofFloat中的第二个参数都是能传哪些值呢？上面的代码中传了个“alpha”和”rotation”,但是究竟它能传哪些值呢？这一点从其名字中可以看出“属性”动画，无疑它是操作对象的属性的，所以它可以接收任意值，但是这里有一个前提，那就是这个属性必须要有get和set方法，什么意思呢？属性动画针对我们传入的属性值，比方说“alpha”,它会去寻找这个属性名所对应的get和set方法，内部会通过java反射机制来调用set函数修改对象属性值。由此我们可以推断出ImageView中肯定会有对alpha属性的get和set操作，通过寻找你会发现这两个方法在ImageView的父类View中，通过寻找在View中确实找到了这两个方法如下
+————————————————
+对经常用到的属性做一个小的总结：
+
+①translationX和translationY：表示在X轴或者Y轴方向上的位移
+
+② scaleX和scaleY：表示在X轴或者Y轴方向上的缩放
+
+③rotation、rotationX和rotationY：这三个属性控制View对象围绕支点进行2D和3D旋转。
+
+④ pivotX和pivotY：这两个属性控制着View对象的支点位置，围绕这个支点进行旋转和缩放变换处理。默认情况下，该支点的位置就是View对象的中心点。
+
+⑤x和y：这是两个简单实用的属性，它描述了View对象在它的容器中的最终位置，它是最初的左上角坐标和translationX和translationY值的累计和。
+
+⑥ alpha：它表示View对象的alpha透明度。默认值是1（不透明），0代表完全透明（不可见）。
+
+当然我们可以操作的属性远远不止这些，任何属性只要有get和set方法，我们都可以操作。
+————————————————
+对于Animator的监听在上面的代码中也略有体现，我们通过调用addUpdateListener这个方法给ValueAnimator添加了一个监听，
+其实从ValueAnimator的源码中可以看出它总共是有两个监听器的，监听器相关源码：
+ //第一种监听：AnimatorUpdateListener 这个监听是在ValueAnimator类中的
+ public static interface AnimatorUpdateListener {
+     void onAnimationUpdate(ValueAnimator animation);
+ }
+ //添加AnimatorUpdateListener监听，系统提供给我们的方法
+ public void addUpdateListener(AnimatorUpdateListener listener)
+
+ //第二种监听：这个监听是在Animator这个类中的
+ public static interface AnimatorListener {
+
+      void onAnimationStart(Animator animation);
+      void onAnimationEnd(Animator animation);
+      void onAnimationCancel(Animator animation)；
+      void onAnimationRepeat(Animator animation);
+   }
+ //添加AnimatorListener调用的方法
+ public void addListener(AnimatorListener listener);
+ 
+ objectAnimator.addListener(new AnimatorListener() {
+
+        @Override
+        public void onAnimationStart(Animator animation) {
+
+        }
+
+        @Override
+        public void onAnimationRepeat(Animator animation) {
+
+        }
+
+        @Override
+        public void onAnimationEnd(Animator animation) {
+
+        }
+
+        @Override
+        public void onAnimationCancel(Animator animation) {
+
+        }
+    });
+    
+    
+    组合动画的实现
+上面我们都是对一个对象进行单一的动画，但是一个很酷的动画往往需要多个动画协同完成，谷歌也是给我提供了多种实现方式，一起来看看吧。
+
+要想完成多个动画协同工作需要借助AnimatorSet这个类，这个类主要提供了三个播放方法，play(),playSequentially(),playTogether()。其中playSequentially()表示多个动画按顺序执，它主要有两种形式的参数playSequentially(Animator… items)和playSequentially(List <Animator> animator);一个是可变参数，另一个是动画集合。
+playTogether()表示几个动画同时执行，它接收的参数类型与playSequentially()一致。最后就是play方法了，play方法接收一个Animator动画实例，play(Animator anim)，调用它之后会返回一个AnimatorSet.Builder的实例，AnimatorSet.Builder中包括以下四个方法
+
+after(Animator anim) 将现有动画插入到传入的动画之后执行
+after(long delay) 将现有动画延迟指定毫秒后执行
+before(Animator anim) 将现有动画插入到传入的动画之前执行
+with(Animator anim) 将现有动画和传入的动画同时执行
+好了，理论完了之后就要联系实际了，那接下来我们来做一个这样的组合效果：让一张图片旋转出厂的同时伴随着渐变和缩放，代码可以这样写：
+————————————————
+ObjectAnimator scaleYAnimator=ObjectAnimator.ofFloat(ivImage,"scaleY",0,1);
+ObjectAnimator scaleXAnimator=ObjectAnimator.ofFloat(ivImage,"scaleX",0,1);
+ObjectAnimator rotationXAnimator=ObjectAnimator.ofFloat(ivImage,"rotation",0,360);
+ObjectAnimator alphaAnimator=ObjectAnimator.ofFloat(ivImage,"alpha",0,1);
+AnimatorSet set=new AnimatorSet();
+set.playTogether(scaleXAnimator,scaleYAnimator,alphaAnimator,rotationXAnimator);
+set.setDuration(3000);
+
+
+ObjectAnimator scaleYAnimator=ObjectAnimator.ofFloat(ivImage,"scaleY",0,1);
+ObjectAnimator scaleXAnimator=ObjectAnimator.ofFloat(ivImage,"scaleX",0,1);
+ObjectAnimator rotationXAnimator=ObjectAnimator.ofFloat(ivImage,"rotation",0,360);
+ObjectAnimator alphaAnimator=ObjectAnimator.ofFloat(ivImage,"alpha",1,0); 
+AnimatorSet set=new AnimatorSet();
+/**让scaleYAnimator、scaleXAnimator、rotationXAnimator同时执行
+  *执行完之后执行alphaAnimator*/
+set.play(scaleXAnimator).with(scaleYAnimator);
+set.play(scaleYAnimator).with(rotationXAnimator);
+set.play(alphaAnimator).after(rotationXAnimator);
+
+set.setDuration(3000);
+set.start();
+set.start();
+原文链接：https://blog.csdn.net/dmk877/article/details/52011155
+
+
+
+xml文件实现
+ 在xml文件中总共有可以用三个标签，与代码实现是对应着的
+
+<animator> 对应代码中的ValueAnimator
+<objectAnimator> 对应代码中的ObjectAnimator
+<set< 对应代码中的AnimatorSet
+那么它们都可以设置哪些属性值呢？
+animator中的属性如下：
+————————————————
+<animator
+android:duration="int"
+android:valueFrom="float | int | color"
+android:valueTo="float | int | color"
+android:startOffset="int"
+android:repeatCount="int"
+android:repeatMode=["repeat" | "reverse"]
+android:valueType=["intType" | "floatType"]
+android:interpolator=["@android:interpolator/XXX"]/>
+原文链接：https://blog.csdn.net/dmk877/article/details/52011155
+ android:duration:表示动画播放的时长
+
+android:valueFrom:动画属性开始的值；取值范围为float,int和color，如果未指定，动画开始属性通过属性的get方法获得。颜色用6位16进制数表示(例如：#333333)
+
+android:valueTo：动画结束值；取值范围同valueFrom
+
+android:startOffset：取值范围为int,动画的start方法被调用后，延迟多少毫秒执行。
+
+android:repeatCount：动画重复的次数，可以设置为-1或者正整数，-1表示无限循环，假如我们设置成1，表示重复执行一次，所以它总共会执行2次。
+
+android:repeatMode：动画重复模式，取值为repeat和reverse；repeat表示正序重播，reverse表示倒序重播，这与前面讲的Tween动画是类似的。
+
+android:valueType：表示参数值类型，取值为intType和floatType；与android:valueFrom、android:valueTo相对应。如果这里的取值为intType，那么android:valueFrom、android:valueTo的值也就要对应的是int类型的数值。float也是一样。如果如果android:valueFrom、android:valueTo的值设置为color类型的值，则不需要设置这个参数；
+
+android:interpolator:设置加速器；
+————————————————
+objectAnimator标签中的属性如下：
+<objectAnimator
+      android:propertyName="string"
+      android:duration="int"
+      android:valueFrom="float | int | color"
+      android:valueTo="float | int | color"
+      android:startOffset="int"
+      android:repeatCount="int"
+      android:repeatMode=["repeat" | "reverse"]
+      android:valueType=["intType" | "floatType"]
+      android:interpolator=["@android:interpolator/XXX"]/>
+      
+      
+可以看到与animator中的属性是差不多的，这里多了一个
+
+android:propertyName=”string”表示要做动画的属性名字。其它的属性与animator中的一致，就不再浪费口舌和篇幅了。
+set标签中的属性如下：
+set标签只有一个属性如下：
+- android:ordering=[“together” | “sequentially”]，其中together表示set标签下的动画同时执行，而sequentially表示set标签下的动画逐个执行。
+————————————————
+
+原文链接：https://blog.csdn.net/dmk877/article/details/52011155
+ 
+以一个用xml实现的组合动画结束本篇的内容，我们实现的效果是这样的，先让这个妹子进入到屏幕的正中央，然后让她旋转360度，再然后让她离开屏幕，离开屏幕的同时伴随着透明度的变化。先看效果：
+
+<set xmlns:android="http://schemas.android.com/apk/res/android"  
+    android:ordering="sequentially" >  
+
+    <objectAnimator  
+        android:duration="2000"  
+        android:propertyName="translationX"  
+        android:valueFrom="-500"  
+        android:valueTo="0"  
+        android:valueType="floatType" >  
+    </objectAnimator>  
+
+    <set android:ordering="sequentially" >  
+        <objectAnimator  
+            android:duration="3000"  
+            android:propertyName="rotation"  
+            android:valueFrom="0"  
+            android:valueTo="360"  
+            android:valueType="floatType" >  
+        </objectAnimator>  
+
+        <set android:ordering="together" >  
+            <objectAnimator  
+                android:duration="2000"  
+                android:propertyName="alpha"  
+                android:valueFrom="1"  
+                android:valueTo="0"  
+                android:valueType="floatType" >  
+            </objectAnimator>  
+            <objectAnimator  
+                android:duration="2000"  
+                android:propertyName="translationX"  
+                android:valueFrom="0"  
+                android:valueTo="200"  
+                android:valueType="floatType" >  
+            </objectAnimator>  
+        </set>  
+    </set>  
+
+</set>  
+
+
+Animator animator = AnimatorInflater.loadAnimator(MainActivity.this,
+            R.animator.animator_set);
+animator.setTarget(ivImage);
+animator.start();
+

@@ -1,0 +1,14 @@
+在实际开发中，我们可能需要单独修改ListView中的某一个view的内容，如果使用适配器上的notifyDataSetChanged(）方法的话会显得有些多余，而且会导致用户体验差，这时候可以使用getChildAt(int)方法单独获取某个view进行修改
+
+
+链接：https://www.jianshu.com/p/b08b1204bbf3
+
+宽高都是wrap_content那就一样,是原图大小,但是,当我们固定了宽或者高的话, 差别就显而易见了,blackground完全填充了整个ImageView,而src依旧是那么大, 而且他居中了
+
+imageView.setImageResource = android：src
+
+src 源代码
+resource 资源文件
+
+setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+super.setScaleType(ScaleType.MATRIX);

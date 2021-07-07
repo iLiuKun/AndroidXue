@@ -1,0 +1,226 @@
+void onMeasure(int widthMeasureSpec, int heightMeasureSpec)：https://blog.csdn.net/dmk877/article/details/49558367, ---------measureChild  中会被调用
+widthMeasureSpec和heightMeasureSpec  由View的父容器传递过来的测量要求,担任此重任的是ViewRootImpl，
+绘制开始是从ViewRootImpl中的performTraversals()这个方法开始的，我们来看看源码:
+private void performTraversals() {
+		 
+             int desiredWindowWidth;
+	     int desiredWindowHeight;
+	     int childWidthMeasureSpec;
+	     int childHeightMeasureSpec;
+	     
+	     。。。省略部分代码。。。
+		 
+             DisplayMetrics packageMetrics =
+	     mView.getContext().getResources().getDisplayMetrics();
+	     desiredWindowWidth = packageMetrics.widthPixels;
+	     desiredWindowHeight = packageMetrics.heightPixels;
+	     
+	     。。。省略部分代码。。。
+	             
+           childWidthMeasureSpec = getRootMeasureSpec(desiredWindowWidth, lp.width);
+           childHeightMeasureSpec = getRootMeasureSpec(desiredWindowHeight, lp.height);
+ 
+	    。。。省略部分代码。。。
+	            
+	   host.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+	    
+	     。。。省略部分代码。。。
+	            
+	    }
+      
+ 我们清楚的看到在此调用了getRootMeasureSpec方法后会得到childWidthMeasureSpec和childHeightMeasureSpec，
+ 得到的这个数据作为参数传给host(这里的host是View)measure方法。在调用getRootMeasureSpec时需要两个参数desiredWindowWidth ，
+ lp.width和desiredWindowHeight  ， lp.height这里我们看到desiredWindowWidth 和desiredWindowHeight就是我们窗口的大小
+ 而lp.width和lp.height均为MATCH_PARENT，其在mWindowAttributes（WindowManager.LayoutParams类型）将值赋予给lp时就已被确定。
+ 参数搞明白后我们来看看getRootMeasureSpec的源码，看看它都是干了个啥。
+————————————————
+    /**
+     * Figures out the measure spec for the root view in a window based on it's
+     * layout params.
+     *
+     * @param windowSize
+     *            The available width or height of the window
+     *
+     * @param rootDimension
+     *            The layout params for one dimension (width or height) of the
+     *            window.
+     *
+     * @return The measure spec to use to measure the root view.
+     */
+    private int getRootMeasureSpec(int windowSize, int rootDimension) {
+        int measureSpec;
+        switch (rootDimension) {
+ 
+        case ViewGroup.LayoutParams.FILL_PARENT:
+            // Window can't resize. Force root view to be windowSize.
+            measureSpec = MeasureSpec.makeMeasureSpec(windowSize, MeasureSpec.EXACTLY);
+            break;
+        case ViewGroup.LayoutParams.WRAP_CONTENT:
+            // Window can resize. Set max size for root view.
+            measureSpec = MeasureSpec.makeMeasureSpec(windowSize, MeasureSpec.AT_MOST);
+            break;
+        default:
+            // Window wants to be an exact size. Force root view to be that size.
+            measureSpec = MeasureSpec.makeMeasureSpec(rootDimension, MeasureSpec.EXACTLY);
+            break;
+        }
+        return measureSpec;
+    }
+总之这个方法执行后不管是哪一种情况我们的根视图都是全屏的。在上面中大家看到MeasureSpec这个类有点陌生，MeasureSpec这个类的设计很精妙，
+对于学习自定义View也非常重要，理解它对于学习自定义控件非常有用接下来我们就花点篇幅来详细的讲解一下这个类，
+measurespec封装了父类传递给子类的测量要求，每个measurespec代表宽度或者高度的要求以及大小，也就是说一个measurespec包含size和mode。它有三种mode(模式)
+ ①UNSPECIFIED：父View没有对子View施加任何约束。它可以是任何它想要的大小。 
+ ②EXACTLY：父View已经确定了子View的确切尺寸。子View将被限制在给定的界限内，而忽略其本身的大小。 
+ ③AT_MOST：子View的大小不能超过指定的大小
+它有三个主要的方法：
+
+①getMode(imeasureSpec)它的作用就是根据规格提取出mode，这里的mode是上面的三种模式之一
+
+②getSize(int measureSpec)它的作用就是根据规格提取出size，这里的size就是我们所说的大小
+
+③makeMeasureSpec(int size, int mode)根据size和mode，创建一个测量要求。
+
+
+我们看到在performTraversals方法中会调用host.measure(childWidthMeasureSpec,childHeightMeasureSpec)，这样childWidthMeasureSpec和childHeightMeasureSpec这两个测量要求就一步一步的传下去并由当前View与其父容器共同决定其测量大小，在这里View与ViewGroup中的递归调用过程中有几个重要的方法，而对于View是measure方法，接着我们看看host.measure也就是View的measure方法的源码吧
+public class View implements ... {
+		
+	。。。省略了部分代码。。。
+	
+	 public final void measure(int widthMeasureSpec, int heightMeasureSpec) {
+			//判断是否为强制布局，即带有“FORCE_LAYOUT”标记 以及 widthMeasureSpec或heightMeasureSpec发生了改变
+	        if ((mPrivateFlags & FORCE_LAYOUT) == FORCE_LAYOUT ||
+	                widthMeasureSpec != mOldWidthMeasureSpec ||
+	                heightMeasureSpec != mOldHeightMeasureSpec) {
+	        	//清除MEASURED_DIMENSION_SET标记   ，该标记会在onMeasure()方法后被设置
+	            mPrivateFlags &= ~MEASURED_DIMENSION_SET;
+ 
+	            if (ViewDebug.TRACE_HIERARCHY) {
+	                ViewDebug.trace(this, ViewDebug.HierarchyTraceType.ON_MEASURE);
+	            }
+	            // 1、 测量该View本身的大小
+	            onMeasure(widthMeasureSpec, heightMeasureSpec);
+ 
+	            if ((mPrivateFlags & MEASURED_DIMENSION_SET) != MEASURED_DIMENSION_SET) {
+	                throw new IllegalStateException("onMeasure() did not set the"
+	                        + " measured dimension by calling"
+	                        + " setMeasuredDimension()");
+	            }
+	          //下一步是layout了，添加LAYOUT_REQUIRED标记
+	            mPrivateFlags |= LAYOUT_REQUIRED;
+	        }
+	        mOldWidthMeasureSpec = widthMeasureSpec;//保存值
+	        mOldHeightMeasureSpec = heightMeasureSpec;//保存值
+	    }	
+	
+	}
+  
+  在measure方法中调用了onMeasure方法，你是不是应该笑30分钟？终于见到我们的onMeasure方法了，这里的onMeasure就是我们重写的onMeasure，它接收两个参数widthMeasureSpec和heightMeasureSpec这两个参数由父View构建，表示父View对子View的测量要求。它有它的默认实现，即重写后我们什么都不做直接调用super.onMeasure方法它的默认实现如下
+protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        setMeasuredDimension(getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec),
+                getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec));
+    }
+    
+    在onMeasure方法中直接调用setMeasuredDimension方法，在这里它会调用getSuggestedMinimumWidth方法得到的数据传递给getDefaultSize方法，首先来看看getSuggestedMinimunWidth，getDefaultSize以及setMeasuredDimension这三个方法的源码吧
+protected int getSuggestedMinimumWidth() {
+		//获得android:minHeight这个属性的值，一般不设置此属性如果没有设置的话mMinWidth=0
+        int suggestedMinWidth = mMinWidth;
+        if (mBGDrawable != null) {
+        	//获得背景的宽度
+            final int bgMinWidth = mBGDrawable.getMinimumWidth();
+            //从背景的宽度和minHeight属性中选出一个最大的值作为返回值
+            if (suggestedMinWidth < bgMinWidth) {
+                suggestedMinWidth = bgMinWidth;
+            }
+        }
+        return suggestedMinWidth;
+    }
+	//在这里这里size是getSuggestedMinimumWidth方法的返回值,这也是默认的大小
+	//measureSpec是父View传过来的measureSpec，测量要求
+	public static int getDefaultSize(int size, int measureSpec) {
+        int result = size;
+        //获得测量的模式
+        int specMode = MeasureSpec.getMode(measureSpec);
+        //获得测量的大小
+        int specSize =  MeasureSpec.getSize(measureSpec);
+ 
+        switch (specMode) {
+        //模式为Unspecified及未指定大小
+        case MeasureSpec.UNSPECIFIED:
+        	//将上面的size作为结果返回
+            result = size;
+            break;
+        case MeasureSpec.AT_MOST://模式为At_Most,此时使用默认的大小size
+        case MeasureSpec.EXACTLY://模式为Exactly，此时返回测量值
+            result = specSize;
+            break;
+        }
+        return result;
+    }
+	//为View设置宽和高
+	protected final void setMeasuredDimension(int measuredWidth, int measuredHeight) {
+        mMeasuredWidth = measuredWidth;
+        mMeasuredHeight = measuredHeight;
+ 
+        mPrivateFlags |= MEASURED_DIMENSION_SET;
+    }
+    
+    
+    这只是一个自定义View的默认实现，如果想按照我们的要求来进行绘制的话，重写onMeasure需要添加我们自己的逻辑去实现，最终在onMeasure方法中会调用setMeasureDimenSion决定我们的View的大小，这也是我们重写onMeasure方法的最终目的。
+
+上面这些是对于一个View的测量，android中在进行测量时有两种情况，一种是一个View如Button，ImaeView这中，不能包含子View的对于这种测量一下就ok了，另外一种就是ViewGroup像LinearLayout,FrameLayout这种可以包含子View的，对于这种我们就需要循环遍历每一个子View并为其设置大小，在自定义的ViewGroup中重写onMeasure如下的伪代码
+//某个ViewGroup类型的视图  
+	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {  
+	  //必须调用super.ononMeasure()或者直接调用setMeasuredDimension()方法设置该View大小，否则会报异常。  
+	  super.onMeasure(widthMeasureSpec , heightMeasureSpec)  
+	     //setMeasuredDimension(getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec),  
+	     //        getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec));  
+	       
+	  //一、遍历每个子View  
+	  for(int i = 0 ; i < getChildCount() ; i++){  
+	    View child = getChildAt(i);  
+	    //调用子View的onMeasure，设置他们的大小,
+	    child.onMeasure(childWidthMeasureSpec, childHeightMeasureSpec);  
+	  }  
+	  //二、直接调用ViewGroup中给我们提供好的measureChildren方法、
+	  measureChildren(widthMeasureSpec, heightMeasureSpec);
+	}
+  
+  其实ViewGroup已经为我们提供了测量子View的方法，主要有measureChildren，measureChild和getMeasureSpec，下面我们来分别看看这三个方法都是干了个啥？
+measureChildren方法的源码如下
+//widthMeasureSpec和heightMeasureSpec:父View传过来的测量要求
+	protected void measureChildren(int widthMeasureSpec, int heightMeasureSpec) {
+        final int size = mChildrenCount;
+        final View[] children = mChildren;
+        //遍历所有的View
+        for (int i = 0; i < size; ++i) {
+            final View child = children[i];
+            //Gone掉的View排除
+            if ((child.mViewFlags & VISIBILITY_MASK) != GONE) {
+                measureChild(child, widthMeasureSpec, heightMeasureSpec);
+            }
+        }
+    }
+    
+    
+    protected void measureChild(View child, int parentWidthMeasureSpec,
+            int parentHeightMeasureSpec) {
+		// 获取子元素的布局参数
+        final LayoutParams lp = child.getLayoutParams();
+        //将父容器的测量规格以及上下和左右的边距还有子元素本身的布局参数传入getChildMeasureSpec方法计算最终测量要求 
+        final int childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec,
+                mPaddingLeft + mPaddingRight, lp.width);
+        final int childHeightMeasureSpec = getChildMeasureSpec(parentHeightMeasureSpec,
+                mPaddingTop + mPaddingBottom, lp.height);
+        // 将计算好的宽高详细测量值传入measure方法，完成最后的测量
+        child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
+    }
+
+void onDraw(Canvas canvas)
+canvas.drawText
+
+
+①重写onMeasure(获得半径的大小)
+
+②重写onLayout(获得圆的位置)
+
+③重写onDraw(用实例化的画笔包括:颜色，粗细等去绘画)

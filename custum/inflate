@@ -1,0 +1,33 @@
+如果根节点的标签是merge，如果root为null或者attachToRoot为false会直接抛异常，
+也就是当根标签为merge的时候必须使用inflater.inflate(R.layout.layout_inflate_test, root,true);这种形式，不然会报错
+
+如果root != null，创建LayoutParams，params = root.generateLayoutParams(attrs);这个参数attrs来自上面的final AttributeSet attrs = Xml.asAttributeSet(parser);Xml.asAttributeSet(parser)这句代码我也不是很懂，但是有时候可以通过具体现象或返回值推算某一句代码的作用。它返回一个AttributeSet，AttributeSet是view的布局属性集合，所以这里的作用就是把我们传入的布局的属性拿到。然后后面根据这些属性创建LayoutParams。
+
+如果attachToRoot为false时执行temp.setLayoutParams(params);将上面得到的LayoutParams给temp－－也就是我们上面根据布局根目录标签创建的的那个View设置上。布局根目录一般都是LinearLayout，RelativeLayout等这些ViewGroup，当然也可以是view
+假如root不为空，并且attachToRoot为true，那么root就把生成的temp装到自己里面addView，后面还有参数params。temp会被添加到root的最后，并且params设置给temp
+如果root为空，那么attachToRoot就不用看了，attachToRoot为true或者false都没有意义， 直接result = temp。注意这里temp是没有被设置刚才的LayoutParams的，而LayoutParams是用来设置位置、高、宽等信息，也就意味着temp的这些属性是全新的
+
+
+如果root为null，attachToRoot将失去作用，设置任何值都没有意义。
+如果root不为null，attachToRoot设为true，则会给加载的布局文件的指定一个父布局，即root。
+如果root不为null，attachToRoot设为false，则会将布局文件最外层的所有layout属性进行设置，当该view被添加到父view当中时，这些layout属性会自动生效。
+在不设置attachToRoot参数的情况下，如果root不为null，attachToRoot参数默认为true。
+首先，inflate(R.layout.xxx,null) 。这是最简单的写法，这样生成的布局就是根据http://R.layout.xxx返回的View。要知道，这个布局文件中的宽高属性都是相当于父布局而言的。由于没有指定parent，所以他的宽高属性就失效了，因此不管你怎么改宽高属性，都无法按你想象的那样显示。
+
+然后，inflate(R.layout.xxx,parent,false)。相较于前者，这里加了父布局，不管后面是true还是false，由于有了parent，布局文件的宽高属性是有依靠了，这时候显示的宽高样式就是布局文件中的那样了。
+
+最后，inflate(R.layout.xxx,parent,true)。这样……等等，报错了？？？哦，不要惊奇，分析一下原因：首先，有了parent，所以可以正确处理布局文件的宽高属性。然后，既然attachToRoot为true，那么根据上面的源码就会知道，这里会调用root的addView方法。而如果root是listView等，由于他们是继承自AdapterView的，看看AdapterView的addView方法：
+
+@OverridepublicvoidaddView(Viewchild){
+
+thrownewUnsupportedOperationException("addView(View) is not supported in AdapterView");}
+
+不资磁啊，那好吧，如果换成RecyclerView呢？还是报错了，看看源码：
+if(child.getParent()!=null){
+
+thrownewIllegalStateException("The specified child already has a parent. "+"You must call removeView() on the child's parent first.");}
+现在知道了吧，adpater里面不要用true。
+该方法返回Fragment的UI布局，需要注意的是inflate()的第三个参数是false，因为在Fragment内部实现中，会把该布局添加到container中，如果设为true，那么就会重复做两次添加，则会抛如下异常：
+
+Caused by: java.lang.IllegalStateException: The specified child already has a parent. You must call removeView() on the child's parent first.
+链接：https://www.jianshu.com/p/f2f1ea06142c

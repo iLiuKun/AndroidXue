@@ -1,0 +1,11 @@
+MaterialAlertDialogBuilder
+View view = getLayoutInflater().inflate(R.layout.dialog_modify_room_name, null)
+new MaterialAlertDialogBuilder(this)
+                .setTitle("修改房间名")
+                .setView(view)
+                .setNegativeButton("取消", null)
+                .setPositiveButton("确认", (dialog, which) -> {
+                    mMainHandler.post(() -> mModifiedRoomNameText.setText(editText.getText().toString()));
+                })
+                .create()
+                .show();

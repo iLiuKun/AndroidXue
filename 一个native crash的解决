@@ -1,0 +1,45 @@
+因为项目需要，需要将一个工程D的代码并入到主工程M。其实D工程有视频聊天的功能，采用了第三方的SDKagora。原理的功能是OK的，导入到M工程后，每次打开视频聊天的页面就会崩溃。看堆栈的日志是：
+
+
+
+05-11 15:31:48.214 28365 28365 F art : art/runtime/http://java_vm_ext.cc:470] JNI DETECTED ERROR IN APPLICATION: JNI GetMethodID called with pending exception java.lang.NoSuchMethodError: no non-static method "Lio/agora/NativeAgoraAPI$CallBack;.onReconnecting(I)V"
+
+05-11 15:31:48.215 28365 28365 F art : art/runtime/http://java_vm_ext.cc:470] at void io.agora.NativeAgoraAPI.callbackSet(io.agora.IAgoraAPI$ICallBack) (NativeAgoraAPI.java:-2)
+
+05-11 15:31:48.215 28365 28365 F art : art/runtime/http://java_vm_ext.cc:470] at void io.agora.AgoraAPIOnlySignal.<init>(android.content.Context, java.lang.String) (AgoraAPIOnlySignal.java:16)
+
+05-11 15:31:48.215 28365 28365 F art : art/runtime/http://java_vm_ext.cc:470] at io.agora.AgoraAPIOnlySignal io.agora.AgoraAPIOnlySignal.getInstance(android.content.Context, java.lang.String) (AgoraAPIOnlySignal.java:41)
+
+05-11 15:31:48.215 28365 28365 F art : art/runtime/http://java_vm_ext.cc:470] at void *.SignalManager.init() (？？:？)
+
+05-11 15:31:48.215 28365 28365 F art : art/runtime/http://java_vm_ext.cc:470] at void ？.<init>(android.content.Context) (？？:？？)
+
+05-11 15:31:48.215 28365 28365 F art : art/runtime/http://java_vm_ext.cc:470] at ？？？??// (android.content.Context) (？？:？？)
+
+05-11 15:31:48.215 28365 28365 F art : art/runtime/http://java_vm_ext.cc:470] at void ????？？？？Activity.onCreate(android.os.Bundle) (??:??)
+
+
+
+一开始认为是so库没有导入成功，将编译后的apk解压缩以后，发现libsdk2已经打包进了apk。后来在网上搜索一直没有找到原因。最后仔细研究堆栈，发现：
+
+
+
+JNI GetMethodID called with pending exception java.lang.NoSuchMethodError:
+
+一直没有理解这个错误，最后明白，这个是java将一个回调的类传递给native方法，等
+
+native方法回调 NativeAgoraAPI$CallBack;.onReconnecting(I)V"， 但是这个方法通过JNI调用无法找到。
+
+接着，在app的gradle里面，发现
+
+minifyEnabled true
+
+所以，在gradle打包的时候，发现这个类没有用，便被优化了。
+
+因此，使用 设置proguard来keep这个类即可。
+
+采用上述步骤操作，问题很快得到了解决。
+
+
+
+在代码查找不到原因的时候，很可能是混淆和优化引起的。昨天就遇到了网络使用的数据类没有keep，导致网络访问出错，keep classmember以后，就解决了

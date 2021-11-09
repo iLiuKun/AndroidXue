@@ -1,3 +1,4 @@
+安装失败， 检查testonly
 # AndroidXue
 ## kotlin
 fun sum(a: Int, b: Int): Int {   // Int 参数，返回值 Int

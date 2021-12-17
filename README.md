@@ -1,4 +1,5 @@
 安装失败， 检查testonly
+http://crazyandcoder.work/archives
 https://www.jianshu.com/p/d4415033349d
 https://juejin.cn/post/6844903695147073544
 # AndroidXue

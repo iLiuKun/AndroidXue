@@ -1,4 +1,5 @@
 安装失败， 检查testonly
+https://juejin.cn/post/6844904116561379341
 https://www.jianshu.com/p/da10007797b1
 http://crazyandcoder.work/archives
 https://www.jianshu.com/p/d4415033349d

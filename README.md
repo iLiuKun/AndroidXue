@@ -6,6 +6,7 @@ https://www.jianshu.com/p/d4415033349d
 https://juejin.cn/post/6844903695147073544
 https://www.cnblogs.com/cxuanBlog/p/12244731.html
 https://blog.piasy.com/2016/06/07/Open-gl-es-android-2-part-1/index.html
+https://juejin.cn/post/6844903496412561416
 # AndroidXue
 ## kotlin
 fun sum(a: Int, b: Int): Int {   // Int 参数，返回值 Int
